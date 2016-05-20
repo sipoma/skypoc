@@ -1,28 +1,39 @@
-FROM mcortinas/docker:centos7-jdk-8u45-latest
-MAINTAINER Marc Cortinas <marc.cortinas@gmail.com> (@mcortinas)
+FROM fedora
+#FROM registry.access.redhat.com/rhel7.1
 
-#RUN wget https://mega.co.nz/#!UwgwzLja!dHu_a0L16zaoO7DPSZ_NnPJKh7pdwcy-pNuNxwfOTaM -O /opt/jboss-eap-6.4.zip
-RUN wget http://pepitolospalotes.cortinasval.cat/jboss-eap-6.4.0.zip -O /opt/jboss-eap-6.4.zip
-RUN yum -y install unzip
-RUN cd /opt
-RUN unzip -o /opt/jboss-eap-6.4.zip
-RUN rm -f /opt/jboss-eap-6.4.zip
+MAINTAINER Luigi Fugaro <lfugaro@redhat.com>
 
-ENV EAP_HOME=/opt/jboss-eap-6.4
+RUN dnf -y update && dnf clean all
 
-COPY docker-entrypoint.sh /
-ENTRYPOINT ["/docker-entrypoint.sh"]
+RUN dnf install -y wget telnet findutils zip tar unzip mlocate
+RUN dnf -y install java-1.8.0-openjdk java-1.8.0-openjdk-devel
 
-EXPOSE 9990 9999 9443 8080 4447
+RUN mkdir /opt/rh
 
-CMD ["/opt/jboss-eap-6.4/bin/standalone.sh"]
+WORKDIR /opt/rh
 
-LABEL vendor=Marc\ Cortinas\
-      cat.cortinasval.docker.operatingsystem="CentOS" \
-      cat.cortinasval.docker.operatingsystemmajrelease="7" \
-      cat.cortinasval.docker.app="jboss-eap" \
-      cat.cortinasval.docker.apprelease="6.4" \
-      cat.cortinasval.docker.version="0.0.1-test" \
-      cat.cortinasval.docker.release-date="2015-06-16"\
-      description="CentOS 7 official image with oracle jdk 8u45-b14\
-      adding jboss-eap-6.4"
+RUN wget http://www-us.apache.org/dist/tomcat/tomcat-7/v7.0.69/bin/apache-tomcat-7.0.69.zip
+
+RUN unzip apache-tomcat-7.0.69.zip
+
+RUN rm -rf apache-tomcat-7.0.69.zip
+
+RUN ls -la
+
+WORKDIR /opt/rh/apache-tomcat-7.0.69
+
+RUN chmod +x bin/*.sh
+
+#
+# DEPLLY dentro webapps
+#
+#
+# ADD deploy.war /opt/rh/apache-tomcat-7.0.69/webapps/
+#
+
+
+ENV JAVA_OPTS="-Djava.net.preferIPv4Stack=true"
+
+ENTRYPOINT ["./bin/catalina.sh"]
+
+CMD ["run"]
